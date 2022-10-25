@@ -100,8 +100,9 @@ inline string encrypt(string in, string key)
 		return "<Missing an encryption key>";
 
 	//Replace all breaks with special code, for bug-related reason.
-	key = ReplaceAll(key, "\r\n", "<--PMAENCRYPT---037548-->");
-	in = ReplaceAll(sha512(key) + in, "\r\n", "<--PMAENCRYPT---037548-->");
+	key = sha512(key);
+	//key = ReplaceAll(key, "\r\n", "<PMA037548>");
+	in = ReplaceAll(key + in, "\r\n", "<PMA037548>");
 
 	//Take each character of our key...
 	for (int input_char = 0; input_char < in.length(); input_char++)
@@ -132,10 +133,10 @@ inline string decrypt(string in, string key, bool bShowIfFail=false)
 	if (key == "")
 		return "<Missing an encryption key>";
 
-	string confirm = sha512(key);
+	key = sha512(key);
 
 	//Replace line breaks due to a bug.
-	key = ReplaceAll(key, "\r\n", "<--PMAENCRYPT---037548-->");
+	//key = ReplaceAll(key, "\r\n", "<PMA037548>");
 
 	//Perform decryption.
 	for (int key_char = key.length() - 1; key_char > -1; key_char--)
@@ -153,12 +154,12 @@ inline string decrypt(string in, string key, bool bShowIfFail=false)
 
 	//After the decryption attempt, this is when we look for our confirm word at the beginning of the message.
 	//If it's there, then obviously the attempt was successful.
-	if ( (!bShowIfFail) && (confirm != sha512(key)))
+	if ( (!bShowIfFail) && (in.substr(0,128) != key) )
 		return "<Decryption Un-successful>";
 	
 	//Remove the first 128 characters, which is the SHA512 hash.
 	in = in.substr(128, in.length() - 1);
-	in = ReplaceAll(in.data(), "<--PMAENCRYPT---037548-->", "\r\n");
+	in = ReplaceAll(in.data(), "<PMA037548>", "\r\n");
 
 	return in.data();
 }
